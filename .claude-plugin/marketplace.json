@@ -1,0 +1,18 @@
+{
+  "name": "codedby-claude-plugins",
+  "owner": {
+    "name": "codedby",
+    "email": "astyk798@gmail.com"
+  },
+  "metadata": {
+    "description": "Claude Code plugins by codedby"
+  },
+  "plugins": [
+    {
+      "name": "ask-claude-web",
+      "source": "./plugins/ask-claude-web",
+      "description": "Chat with claude.ai directly from Claude Code via chrome-devtools MCP",
+      "version": "1.0.0"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "ask-claude-web",
+  "description": "Chat with claude.ai directly from Claude Code via chrome-devtools MCP. Send questions, wait for streaming responses, and extract answers — all automated.",
+  "version": "1.0.0",
+  "author": {
+    "name": "codedby",
+    "email": "astyk798@gmail.com"
+  },
+  "repository": "https://github.com/codedby-kr/codedby-claude-plugins",
+  "license": "MIT"
+}

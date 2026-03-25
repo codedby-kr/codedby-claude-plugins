@@ -1,0 +1,9 @@
+{
+  "_platform": "Windows default. macOS/Linux users: claude mcp add chrome-devtools -s user -- npx -y chrome-devtools-mcp@latest --autoConnect",
+  "mcpServers": {
+    "chrome-devtools": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "chrome-devtools-mcp@latest", "--autoConnect"]
+    }
+  }
+}
