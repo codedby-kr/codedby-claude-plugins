@@ -155,7 +155,7 @@ claude mcp add chrome-devtools -s user -- npx -y chrome-devtools-mcp@latest --au
 
 **Windows:**
 ```bash
-claude mcp add chrome-devtools -s user -- cmd /c npx -y chrome-devtools-mcp@latest --autoConnect
+claude mcp add-json chrome-devtools '{"type":"stdio","command":"cmd","args":["/c","npx","-y","chrome-devtools-mcp@latest","--autoConnect"]}' -s user
 ```
 
 </details>

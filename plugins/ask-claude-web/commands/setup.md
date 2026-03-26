@@ -13,7 +13,7 @@ allowed-tools: Bash(claude mcp:*), Bash(npx:*)
      ```
    - **Windows (native, not WSL):**
      ```
-     claude mcp add chrome-devtools -s user -- cmd /c npx -y chrome-devtools-mcp@latest --autoConnect
+     claude mcp add-json chrome-devtools '{"type":"stdio","command":"cmd","args":["/c","npx","-y","chrome-devtools-mcp@latest","--autoConnect"]}' -s user
      ```
 
 3. Verify: run `claude mcp list` and confirm chrome-devtools appears.
