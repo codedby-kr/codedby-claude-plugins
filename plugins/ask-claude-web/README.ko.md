@@ -4,7 +4,7 @@
 
 **복사-붙여넣기 없이 claude.ai와 Claude Code가 직접 대화합니다.**
 
-**최신: v1.2.1** · [변경 이력](./CHANGELOG.md)
+**최신: v1.3.0** · [변경 이력](./CHANGELOG.md)
 
 PEV Loop (Plan → Execute → Verify), Multi-Agent Orchestration —
 2026년 AI 개발의 핵심 패턴들은 모두 "AI가 혼자 하지 않고, 역할을 나눠서 협업한다"는
@@ -171,17 +171,27 @@ MCP 연결 확인: `/mcp` → `chrome-devtools · ✔ connected`
 
 ### 업데이트
 
-Claude Code 캐시 문제로 플러그인 업데이트가 자동 반영되지 않을 수 있습니다.
-구버전이 유지되면:
+```
+/ask-claude-web:update
+```
 
-1. 최신 마켓플레이스 pull:
-   `git -C ~/.claude/plugins/marketplaces/codedby-claude-plugins pull`
-2. 플러그인 캐시 삭제:
-   `rm -rf ~/.claude/plugins/cache/codedby-claude-plugins/ask-claude-web/`
-3. Claude Code 재시작
-4. 재설치: `/plugin install ask-claude-web@codedby-claude-plugins`
+최신 버전을 가져오고, 캐시를 정리하고, 플러그인을 업데이트합니다.
+완료 후 `/reload-plugins` 입력 또는 Claude Code를 재시작하세요.
+
+<details>
+<summary>수동 업데이트</summary>
+
+```bash
+git -C ~/.claude/plugins/marketplaces/codedby-claude-plugins pull origin main
+rm -rf ~/.claude/plugins/cache/codedby-claude-plugins/ask-claude-web/
+claude plugin update ask-claude-web@codedby-claude-plugins -s user
+```
+
+완료 후 `/reload-plugins` 입력 또는 Claude Code를 재시작하세요.
 
 > PowerShell 사용자: 위 명령에서 `~`를 `$HOME`으로 바꿔주세요.
+
+</details>
 
 ---
 

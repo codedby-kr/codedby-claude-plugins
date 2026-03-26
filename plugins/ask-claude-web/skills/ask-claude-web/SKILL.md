@@ -6,8 +6,6 @@ description: "Collaborate with claude.ai from Claude Code via chrome-devtools MC
 
 # ask-claude-web Skill
 
-<!-- UPDATE TEST v1.2.5 — delete after test -->
-
 ## Overview / 개요
 
 Automates collaboration with claude.ai via chrome-devtools MCP — discussions, reviews, verification, and questions with multi-turn support.

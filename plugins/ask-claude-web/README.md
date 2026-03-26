@@ -4,7 +4,7 @@
 
 **No copy-paste — claude.ai and Claude Code talk directly.**
 
-**Latest: v1.2.1** · [Changelog](./CHANGELOG.md)
+**Latest: v1.3.0** · [Changelog](./CHANGELOG.md)
 
 PEV Loop (Plan → Execute → Verify), Multi-Agent Orchestration —
 the key patterns in 2026 AI development all point in one direction:
@@ -170,17 +170,27 @@ Open [claude.ai](https://claude.ai) in Chrome and log in. On first connection, c
 
 ### Updating
 
-Plugin updates may not apply automatically due to a Claude Code caching issue.
-If you're on an old version after updating:
+```
+/ask-claude-web:update
+```
 
-1. Pull the latest marketplace:
-   `git -C ~/.claude/plugins/marketplaces/codedby-claude-plugins pull`
-2. Clear the plugin cache:
-   `rm -rf ~/.claude/plugins/cache/codedby-claude-plugins/ask-claude-web/`
-3. Restart Claude Code
-4. Reinstall: `/plugin install ask-claude-web@codedby-claude-plugins`
+This pulls the latest version, clears cache, and updates the plugin automatically.
+After it finishes, type `/reload-plugins` or restart Claude Code to apply.
+
+<details>
+<summary>Manual update</summary>
+
+```bash
+git -C ~/.claude/plugins/marketplaces/codedby-claude-plugins pull origin main
+rm -rf ~/.claude/plugins/cache/codedby-claude-plugins/ask-claude-web/
+claude plugin update ask-claude-web@codedby-claude-plugins -s user
+```
+
+Then type `/reload-plugins` or restart Claude Code.
 
 > PowerShell users: replace `~` with `$HOME` in the commands above.
+
+</details>
 
 ---
 

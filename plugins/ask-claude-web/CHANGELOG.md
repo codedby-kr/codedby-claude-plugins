@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0
+- Added `/ask-claude-web:update` command for easy plugin updates without restarting
+- Updated README Updating section with new update command
+
 ## 1.2.1
 - Fixed Windows setup command (`/c` parsed as path by `claude mcp add`)
 - Use `claude mcp add-json` for Windows chrome-devtools installation
