@@ -1,7 +1,7 @@
 {
   "name": "ask-claude-web",
-  "description": "Chat with claude.ai directly from Claude Code via chrome-devtools MCP. Send questions, wait for streaming responses, and extract answers — all automated.",
-  "version": "1.0.0",
+  "description": "두 개의 Claude가 서로 대화한다 — Claude Code가 claude.ai에게 직접 묻고, 답을 받아 실행한다",
+  "version": "1.1.0",
   "author": {
     "name": "codedby",
     "email": "astyk798@gmail.com"
