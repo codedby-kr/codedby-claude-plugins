@@ -6,7 +6,7 @@ Claude Code plugins by **codedby**.
 
 | Plugin | Description | Status |
 |--------|-------------|--------|
-| [ask-claude-web](./plugins/ask-claude-web/) | 두 개의 Claude가 서로 대화한다 — Claude Code가 claude.ai에게 직접 묻고, 답을 받아 실행한다 | v1.0.0 |
+| [ask-claude-web](./plugins/ask-claude-web/) | Two Claudes talk to each other — Claude Code asks claude.ai directly, gets answers, and acts on them | v1.1.0 |
 
 ## Installation
 
