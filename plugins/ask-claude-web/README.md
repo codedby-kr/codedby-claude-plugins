@@ -4,6 +4,8 @@
 
 **No copy-paste — claude.ai and Claude Code talk directly.**
 
+**Latest: v1.2.1** · [Changelog](./CHANGELOG.md)
+
 PEV Loop (Plan → Execute → Verify), Multi-Agent Orchestration —
 the key patterns in 2026 AI development all point in one direction:
 "AI shouldn't work alone — it should collaborate across specialized roles."
@@ -165,6 +167,20 @@ Verify: `/mcp` → `chrome-devtools · ✔ connected`
 ### 4. Open claude.ai
 
 Open [claude.ai](https://claude.ai) in Chrome and log in. On first connection, click **"Allow"** on Chrome's permission dialog.
+
+### Updating
+
+Plugin updates may not apply automatically due to a Claude Code caching issue.
+If you're on an old version after updating:
+
+1. Pull the latest marketplace:
+   `git -C ~/.claude/plugins/marketplaces/codedby-claude-plugins pull`
+2. Clear the plugin cache:
+   `rm -rf ~/.claude/plugins/cache/codedby-claude-plugins/ask-claude-web/`
+3. Restart Claude Code
+4. Reinstall: `/plugin install ask-claude-web@codedby-claude-plugins`
+
+> PowerShell users: replace `~` with `$HOME` in the commands above.
 
 ---
 

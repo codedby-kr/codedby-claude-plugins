@@ -4,6 +4,8 @@
 
 **복사-붙여넣기 없이 claude.ai와 Claude Code가 직접 대화합니다.**
 
+**최신: v1.2.1** · [변경 이력](./CHANGELOG.md)
+
 PEV Loop (Plan → Execute → Verify), Multi-Agent Orchestration —
 2026년 AI 개발의 핵심 패턴들은 모두 "AI가 혼자 하지 않고, 역할을 나눠서 협업한다"는
 방향을 가리킵니다. 이 플러그인은 그 협업을 claude.ai와 Claude Code 사이에서 자동화합니다.
@@ -166,6 +168,20 @@ MCP 연결 확인: `/mcp` → `chrome-devtools · ✔ connected`
 ### 4. claude.ai 열기
 
 [claude.ai](https://claude.ai) 탭을 열고 로그인. 첫 연결 시 Chrome 권한 대화상자에서 **"허용"** 클릭.
+
+### 업데이트
+
+Claude Code 캐시 문제로 플러그인 업데이트가 자동 반영되지 않을 수 있습니다.
+구버전이 유지되면:
+
+1. 최신 마켓플레이스 pull:
+   `git -C ~/.claude/plugins/marketplaces/codedby-claude-plugins pull`
+2. 플러그인 캐시 삭제:
+   `rm -rf ~/.claude/plugins/cache/codedby-claude-plugins/ask-claude-web/`
+3. Claude Code 재시작
+4. 재설치: `/plugin install ask-claude-web@codedby-claude-plugins`
+
+> PowerShell 사용자: 위 명령에서 `~`를 `$HOME`으로 바꿔주세요.
 
 ---
 
