@@ -85,7 +85,7 @@ Replace `TARGET_FILENAME` with the actual filename (e.g., `player.gd`).
 
 1. **Chrome** must be running — if Chrome is not open, ask the user to launch Chrome and enable remote debugging at `chrome://inspect/#remote-debugging`. Do NOT launch Chrome via system command — the MCP server cannot connect to a Chrome instance started after MCP initialization.
 2. **Chrome remote debugging** must be enabled: `chrome://inspect/#remote-debugging` toggle ON
-3. **chrome-devtools MCP server** must be connected to Claude Code (check `/mcp` → `chrome-devtools · ✔ connected`)
+3. **chrome-devtools MCP server** must be connected to Claude Code (check `/mcp` → `chrome-devtools · ✔ connected`). If `mcp__chrome-devtools__*` tools are not available, stop and tell the user: "chrome-devtools MCP is not connected. Run `/ask-claude-web:setup` to install it." Do NOT attempt to proceed without chrome-devtools.
 4. A **claude.ai tab** must be open and logged in — if no claude.ai tab exists, open one: `chrome-devtools - new_page (url: "https://claude.ai")`
 5. **First connection per session**: Chrome will show a permission dialog ("Allow remote debugging?") — the user must click **Allow**. This happens once per Claude Code session.
 6. **If connection fails**: Ask the user to reconnect via `/mcp` (select chrome-devtools → reconnect) while Chrome is running.

@@ -136,14 +136,34 @@ Chrome을 수동으로 실행 → `chrome://inspect/#remote-debugging` → **"Al
 /plugin install ask-claude-web@codedby-claude-plugins
 ```
 
+### 3. chrome-devtools MCP 설치
+
+```bash
+/ask-claude-web:setup
+```
+
+OS를 자동 감지하여 chrome-devtools MCP 서버를 설치합니다.
+
+<details>
+<summary>수동 MCP 설정 (고급)</summary>
+
+chrome-devtools를 직접 설정하려면:
+
+**macOS / Linux:**
+```bash
+claude mcp add chrome-devtools -s user -- npx -y chrome-devtools-mcp@latest --autoConnect
+```
+
+**Windows:**
+```bash
+claude mcp add chrome-devtools -s user -- cmd /c npx -y chrome-devtools-mcp@latest --autoConnect
+```
+
+</details>
+
 MCP 연결 확인: `/mcp` → `chrome-devtools · ✔ connected`
 
-> **macOS / Linux**: `.mcp.json`은 Windows용입니다. 수동 설정 필요:
-> ```bash
-> claude mcp add chrome-devtools -s user -- npx -y chrome-devtools-mcp@latest --autoConnect
-> ```
-
-### 3. claude.ai 열기
+### 4. claude.ai 열기
 
 [claude.ai](https://claude.ai) 탭을 열고 로그인. 첫 연결 시 Chrome 권한 대화상자에서 **"허용"** 클릭.
 

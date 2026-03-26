@@ -135,14 +135,34 @@ Launch Chrome manually → navigate to `chrome://inspect/#remote-debugging` → 
 /plugin install ask-claude-web@codedby-claude-plugins
 ```
 
+### 3. Install chrome-devtools MCP
+
+```bash
+/ask-claude-web:setup
+```
+
+This detects your OS and installs the chrome-devtools MCP server automatically.
+
+<details>
+<summary>Manual MCP setup (advanced)</summary>
+
+If you prefer to configure chrome-devtools manually:
+
+**macOS / Linux:**
+```bash
+claude mcp add chrome-devtools -s user -- npx -y chrome-devtools-mcp@latest --autoConnect
+```
+
+**Windows:**
+```bash
+claude mcp add chrome-devtools -s user -- cmd /c npx -y chrome-devtools-mcp@latest --autoConnect
+```
+
+</details>
+
 Verify: `/mcp` → `chrome-devtools · ✔ connected`
 
-> **macOS / Linux**: The bundled `.mcp.json` is for Windows. Set up manually:
-> ```bash
-> claude mcp add chrome-devtools -s user -- npx -y chrome-devtools-mcp@latest --autoConnect
-> ```
-
-### 3. Open claude.ai
+### 4. Open claude.ai
 
 Open [claude.ai](https://claude.ai) in Chrome and log in. On first connection, click **"Allow"** on Chrome's permission dialog.
 

@@ -82,7 +82,7 @@ function: () => {
 ## 사전 조건
 - Chrome이 실행 중이어야 함 — 꺼져 있으면 사용자에게 Chrome을 직접 실행하고 `chrome://inspect/#remote-debugging`에서 원격 디버깅을 활성화해달라고 안내할 것. 시스템 명령으로 Chrome을 켜지 마라 — MCP 초기화 이후에 뜬 Chrome에는 연결할 수 없다.
 - `chrome://inspect/#remote-debugging` 토글이 ON이어야 함
-- chrome-devtools MCP 서버가 Claude Code에 연결되어 있어야 함 (`/mcp`에서 chrome-devtools · ✔ connected 확인)
+- chrome-devtools MCP 서버가 Claude Code에 연결되어 있어야 함 (`/mcp`에서 chrome-devtools · ✔ connected 확인). `mcp__chrome-devtools__*` 도구가 사용 불가하면 작업을 중단하고 사용자에게 안내: "chrome-devtools MCP가 연결되어 있지 않습니다. `/ask-claude-web:setup`을 실행하세요." chrome-devtools 없이 진행하지 말 것.
 - Chrome에 claude.ai 탭이 열려있어야 함 (로그인 상태) — 열려있지 않으면 `chrome-devtools - new_page (url: "https://claude.ai")`로 열 것
 - **세션 첫 연결 시**: Chrome에 원격 디버깅 허용 확인창이 뜬다 — 사용자가 **허용(Allow)**을 눌러야 한다. Claude Code 세션당 1회 발생.
 - **연결 실패 시**: Chrome이 켜진 상태에서 `/mcp`로 chrome-devtools를 재연결(reconnect)하라고 안내할 것.
