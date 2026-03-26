@@ -188,7 +188,7 @@ Linux: `sudo apt install xclip` required.
 |-------|----------|
 | MCP disconnected | Run `/mcp` and reconnect chrome-devtools |
 | Input field not found | claude.ai UI updated — skill attempts fallback selectors |
-| Response extraction fails | DOM structure changed — check selector changelog |
+| Response extraction fails | DOM structure changed — check verified selectors table |
 | Chrome permission dialog appears | Shows once per session — click "Allow" and it won't appear again until the session ends |
 | Connection timeout | Verify `chrome://inspect/#remote-debugging` is enabled |
 

@@ -1,12 +1,12 @@
 # codedby-claude-plugins
 
-A collection of [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugins by **codedby**.
+Claude Code plugins by **codedby**.
 
 ## Available Plugins
 
 | Plugin | Description | Status |
 |--------|-------------|--------|
-| [ask-claude-web](./plugins/ask-claude-web/) | Chat with claude.ai directly from Claude Code via chrome-devtools MCP | v1.0.0 |
+| [ask-claude-web](./plugins/ask-claude-web/) | 두 개의 Claude가 서로 대화한다 — Claude Code가 claude.ai에게 직접 묻고, 답을 받아 실행한다 | v1.0.0 |
 
 ## Installation
 
@@ -17,10 +17,6 @@ A collection of [Claude Code](https://docs.anthropic.com/en/docs/claude-code) pl
 # 2. Install a plugin
 /plugin install ask-claude-web@codedby-claude-plugins
 ```
-
-## About codedby
-
-We're a small team building tools that enhance the developer experience with AI.
 
 ## License
 

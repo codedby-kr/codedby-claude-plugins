@@ -200,7 +200,7 @@ Linux: `sudo apt install xclip` 필요.
 |------|----------|
 | MCP 연결 끊김 | `/mcp`에서 chrome-devtools 재연결 |
 | 입력 필드를 못 찾음 | claude.ai UI 업데이트 — 스킬이 fallback 셀렉터 시도 |
-| 응답 추출 실패 | DOM 구조 변경 — 셀렉터 변경 이력 확인 |
+| 응답 추출 실패 | DOM 구조 변경 — 검증된 셀렉터 표 확인 |
 | Chrome 권한 대화상자가 뜸 | 세션당 한 번 표시됨 — "허용" 클릭하면 세션이 끝날 때까지 다시 안 뜸 |
 | 연결 타임아웃 | `chrome://inspect/#remote-debugging` 활성화 확인 |
 
