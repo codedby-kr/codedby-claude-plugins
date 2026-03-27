@@ -1,42 +1,38 @@
----
+﻿---
 name: ask-claude-web
 argument-hint: "discuss with claude.ai [topic or context]"
-description: "Collaborate with claude.ai from Claude Code via chrome-devtools MCP — discuss, verify, review, and get second opinions. Finds the input field, sends messages, detects streaming completion (polling), and extracts the last assistant response. Includes DOM selector version history. Supports multi-turn conversations: send messages, wait for responses, follow up as needed. Trigger on: 'discuss with claude.ai', 'verify with claude.ai', 'ask claude.ai', 'discuss with web claude', 'get claude.ai's review', 'let web claude handle this', 'claude.ai would know this better', 'get claude.ai's opinion'. Use this skill whenever collaboration with claude.ai is needed — discussions, reviews, verification, or simple questions. NEVER use take_snapshot (wastes 130K+ tokens)."
+description: "Load this skill whenever 'web Claude', 'claude.ai', 'web Claude', 'Claude chatbot' is mentioned as a communication target. Automated communication skill that sends messages to a claude.ai web tab and receives responses. Covers all interactions with claude.ai: discuss, verify, review, ask, relay, share, consult. Based on chrome-devtools MCP. Dedicated to real-time conversation with a claude.ai tab. Trigger on: 'discuss with claude.ai', 'verify with claude.ai', 'ask claude.ai', 'discuss with web claude', 'get claude.ai's review', 'let web claude handle this', 'claude.ai would know this better', 'get claude.ai's opinion'. NEVER use take_snapshot (wastes 130K+ tokens)."
 ---
 
 # ask-claude-web Skill
 
-## Overview / 개요
+## Overview
 
-Automates collaboration with claude.ai via chrome-devtools MCP — discussions, reviews, verification, and questions with multi-turn support.
+Automates collaboration between Claude Code and claude.ai via chrome-devtools MCP. Supports discussions, reviews, verification, questions, and multi-turn conversations.
 
----
+## Absolute Rules
 
-## Absolute Rules / 절대 규칙
+### File Attachment — Use Clipboard Method Only
 
-### File Attachment — Use Clipboard Method Only / 파일 첨부는 반드시 클립보드 방식
+**NEVER put file contents into evaluate_script.** NEVER use take_snapshot (130K+ tokens wasted). File content passing through Claude Code's context wastes tokens. When sending files to web Claude, always use the **clipboard Ctrl+V method** below — file contents travel only via OS clipboard → browser, with **zero context consumption**.
 
-**NEVER put file contents into evaluate_script.** NEVER use take_snapshot (130K+ tokens wasted). File content passing through Claude Code's context wastes tokens. Always use the **clipboard Ctrl+V method** below — file contents travel only via OS clipboard → browser, with **zero context consumption**.
-
-파일 내용을 evaluate_script에 넣지 마세요. 반드시 클립보드 방식을 사용하세요.
-
-#### Prohibited / 금지 사항
+#### Prohibited
 - Do NOT embed file contents as template literals in evaluate_script functions
 - Do NOT pass file contents via evaluate_script args
 - Do NOT create File objects via DataTransfer API
 - Do NOT read files with the Read tool and pass to evaluate_script
 
-#### File Attachment Procedure (Zero Context Cost) / 파일 첨부 절차
+#### File Attachment Procedure (Zero Context Cost)
 
 **Step 1** — Copy files to clipboard:
 
 | OS | Command |
 |----|---------|
-| **Windows** | `powershell -File "<plugin-dir>/scripts/clip-files.ps1" "file1.md" "file2.md"` |
-| **macOS** | `bash "<plugin-dir>/scripts/clip-files-mac.sh" "file1.md" "file2.md"` |
-| **Linux** | `bash "<plugin-dir>/scripts/clip-files-linux.sh" "file1.md" "file2.md"` |
+| **Windows** | `powershell -File "${CLAUDE_PLUGIN_ROOT}/scripts/clip-files.ps1" "file1.md" "file2.md"` |
+| **macOS** | `bash "${CLAUDE_PLUGIN_ROOT}/scripts/clip-files-mac.sh" "file1.md" "file2.md"` |
+| **Linux** | `bash "${CLAUDE_PLUGIN_ROOT}/scripts/clip-files-linux.sh" "file1.md" "file2.md"` |
 
-> **Note:** Determine `<plugin-dir>` by checking the plugin installation path. Typically `~/.claude/plugins/ask-claude-web/` after installation.
+> **Note:** `${CLAUDE_PLUGIN_ROOT}` is set by Claude Code when running plugin commands. If unavailable, check the plugin installation path (typically `~/.claude/plugins/cache/codedby-claude-plugins/ask-claude-web/`).
 
 **Step 2** — Focus the input field:
 ```
@@ -75,75 +71,168 @@ function: () => {
 ```
 Replace `TARGET_FILENAME` with the actual filename (e.g., `player.gd`).
 
-#### Notes / 주의사항
-- **macOS:** experimental — not fully tested with claude.ai paste
-- **Linux:** experimental — requires `xclip`, not fully tested with claude.ai paste
+#### Notes
 - Multiple file paths → single Ctrl+V attaches all
 - Non-existent files are skipped with `[SKIP]`
+- **Attached filenames get a timestamp prefix** (e.g., `1774536904906_rule_violations.md`). When verifying attachments, search by the original filename without extension (e.g., `rule_violations`) for partial matching.
 
-## Prerequisites / 사전 조건
+## Prerequisites
 
-1. **Chrome** must be running — if Chrome is not open, ask the user to launch Chrome and enable remote debugging at `chrome://inspect/#remote-debugging`. Do NOT launch Chrome via system command — the MCP server cannot connect to a Chrome instance started after MCP initialization.
-2. **Chrome remote debugging** must be enabled: `chrome://inspect/#remote-debugging` toggle ON
-3. **chrome-devtools MCP server** must be connected to Claude Code (check `/mcp` → `chrome-devtools · ✔ connected`). If `mcp__chrome-devtools__*` tools are not available, stop and tell the user: "chrome-devtools MCP is not connected. Run `/ask-claude-web:setup` to install it." Do NOT attempt to proceed without chrome-devtools.
-4. A **claude.ai tab** must be open and logged in — if no claude.ai tab exists, open one: `chrome-devtools - new_page (url: "https://claude.ai")`
-5. **First connection per session**: Chrome will show a permission dialog ("Allow remote debugging?") — the user must click **Allow**. This happens once per Claude Code session.
-6. **If connection fails**: Ask the user to reconnect via `/mcp` (select chrome-devtools → reconnect) while Chrome is running.
+- **Chrome** must be running — if Chrome is not open, ask the user to launch Chrome manually. Do NOT launch Chrome via system command — the MCP server cannot connect to a Chrome instance started after MCP initialization.
+- `chrome://inspect/#remote-debugging` toggle must be ON
+- **chrome-devtools MCP server** must be connected to Claude Code (check `/mcp` → `chrome-devtools · ✔ connected`)
+- A **claude.ai tab** must be open and logged in
+- **First connection per session**: Chrome will show a permission dialog ("Allow remote debugging?") — the user must click **Allow**. This happens once per Claude Code session.
+- **If connection fails**: Ask the user to reconnect via `/mcp` (select chrome-devtools → reconnect) while Chrome is running.
 
----
-
-## Select the claude.ai Tab / 탭 선택
+## Select the claude.ai Tab
 
 ```
 chrome-devtools - select_page (pageId: <claude.ai tab number>, bringToFront: true)
 ```
 If you don't know the tab number, run `list_pages` first.
 
----
+## Message Sending — 3-Step Universal Flow
 
-## Message Input + Send / 메시지 입력 + 전송
+Whether sending text only or text with file attachments, **always use the same flow**. No need to choose between methods.
 
-### Input Method / 입력 방법
+### Step 1: Prep (streaming check + clear input + remove attachments)
 ```
 chrome-devtools - evaluate_script
-function: () => {
+function: async () => {
+  // Streaming check
+  const stopBtn = document.querySelector(
+    'button[aria-label="Stop Response"], button[aria-label="응답 중단"], button[aria-label="Stop response"]'
+  );
+  const streaming = document.querySelector('[data-is-streaming="true"]');
+  if (stopBtn || streaming) return { safe_to_send: false };
+
+  // Remove existing file attachments
+  const fieldset = document.querySelector('fieldset');
+  let removed = 0;
+  if (fieldset) {
+    const removeBtns = fieldset.querySelectorAll('button[aria-label="Remove"], button[aria-label="제거"]');
+    for (let i = removeBtns.length - 1; i >= 0; i--) { removeBtns[i].click(); }
+    removed = removeBtns.length;
+  }
+
+  // Wait for attachment removal to complete (async DOM update)
+  if (removed > 0) {
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  // Clear input field
   const el = document.querySelector('[contenteditable="true"][data-placeholder]')
     || document.querySelector('fieldset [contenteditable="true"]')
     || document.querySelector('[contenteditable="true"]');
-  if (!el) return 'NOT_FOUND';
+  if (!el) return { error: 'INPUT_NOT_FOUND' };
   el.focus();
   el.textContent = '';
-  document.execCommand('insertText', false, 'YOUR QUESTION HERE');
-  return el.textContent.length;
+
+  return { ready: true, removed };
 }
 ```
+- `safe_to_send: false` → streaming in progress. Wait via Step 4 (streaming wait), then retry Step 1.
+- `ready: true` → proceed to Step 2 (if files to attach) or Step 3 (text only).
 
-No uid needed — DOM is manipulated directly via `evaluate_script`.
+### Step 2: File Attachment (optional — only when files need to be attached)
 
-### Send / 전송
+| OS | Command |
+|----|---------|
+| **Windows** | `powershell -File "${CLAUDE_PLUGIN_ROOT}/scripts/clip-files.ps1" "file1.md" "file2.md"` |
+| **macOS** | `bash "${CLAUDE_PLUGIN_ROOT}/scripts/clip-files-mac.sh" "file1.md" "file2.md"` |
+| **Linux** | `bash "${CLAUDE_PLUGIN_ROOT}/scripts/clip-files-linux.sh" "file1.md" "file2.md"` |
+
+Then paste:
 ```
-chrome-devtools - press_key (key: "Enter")
+chrome-devtools - press_key (key: "Control+v")   // Windows/Linux
+chrome-devtools - press_key (key: "Meta+v")       // macOS
 ```
+If verification is needed, use the DOM check script from "File Attachment Procedure" Step 4.
 
----
+### Step 3: Text Input + Send
+```
+chrome-devtools - evaluate_script
+function: async () => {
+  const el = document.querySelector('[contenteditable="true"][data-placeholder]')
+    || document.querySelector('fieldset [contenteditable="true"]')
+    || document.querySelector('[contenteditable="true"]');
+  if (!el) return { error: 'INPUT_NOT_FOUND' };
+  el.focus();
+  document.execCommand('insertText', false, 'YOUR MESSAGE HERE');
+  // Wait for React to enable the send button
+  await new Promise(r => setTimeout(r, 300));
+  const sendBtn = document.querySelector('button[aria-label="Send Message"], button[aria-label="메시지 보내기"]');
+  if (!sendBtn) return { sent: false, error: 'SEND_BTN_NOT_FOUND' };
+  sendBtn.click();
+  return { sent: true };
+}
+```
+- After `sent: true`, always run the health check below to confirm actual delivery
+- No uid needed — DOM is manipulated directly via `evaluate_script`
 
-## Wait for Response / 응답 대기
+### Health Check (after Steps 2+3, single MCP call)
+Confirms whether the message was actually sent. Waits 2s internally, then checks 4 indicators in a single evaluate_script:
+```
+chrome-devtools - evaluate_script
+function: async () => {
+  await new Promise(r => setTimeout(r, 2000));
+  const input = document.querySelector('[contenteditable="true"][data-placeholder]')
+    || document.querySelector('[contenteditable="true"]');
+  const inputText = input ? input.textContent.trim() : '';
+  const inputEmpty = inputText.length < 5;
+  const stopBtn = document.querySelector(
+    'button[aria-label="Stop Response"], button[aria-label="응답 중단"], button[aria-label="Stop response"]'
+  );
+  const isStreaming = !!stopBtn;
+  const userMsgs = document.querySelectorAll('[data-testid="user-message"]');
+  const lastUserMsg = userMsgs[userMsgs.length - 1];
+  let responseLen = 0;
+  if (lastUserMsg) {
+    let current = lastUserMsg;
+    for (let depth = 0; depth < 10; depth++) {
+      let parent = current.parentElement;
+      if (!parent) break;
+      let nextSib = parent.nextElementSibling;
+      if (nextSib) {
+        const text = nextSib.innerText;
+        if (!text || text.trim().length === 0) { current = parent; continue; }
+        if (text.includes('Claude is AI')) { current = parent; continue; }
+        if (getComputedStyle(nextSib).opacity === '0') { current = parent; continue; }
+        if (nextSib.children.length === 0 && text.length < 15) { current = parent; continue; }
+        if (nextSib.querySelector('[data-testid="user-message"]')) { current = parent; continue; }
+        responseLen = text.length;
+        break;
+      }
+      current = parent;
+    }
+  }
+  return { inputEmpty, inputTextLen: inputText.length, isStreaming, responseLen };
+}
+```
+**Verdict:**
+- Input empty + streaming → **sent successfully.** Proceed to Step 4 (streaming wait).
+- Input has text + not streaming → **send failed.** Resend.
+- Input empty + not streaming → **ambiguous.** Check responseLen for further judgment.
 
-### Streaming Completion Detection (preferred: async Promise) / 스트리밍 완료 감지
+**Resend procedure** (on send failure):
+1. Run streaming check
+2. Not streaming → resend via Enter
+3. Re-run health check
+4. After 2 retries still failing → report to user
 
+## Wait for Response
+
+After sending, wait for claude.ai to finish generating its response.
+
+### Streaming Completion Detection (Step 4, preferred: async Promise)
 Single evaluate_script call that waits until response is complete. Checks every 3 seconds, 5-minute timeout:
 ```
 chrome-devtools - evaluate_script
 function: async () => {
   return new Promise(resolve => {
     const check = setInterval(() => {
-      // Detect if tab was navigated away or crashed
-      if (!document.querySelector('[contenteditable="true"]')) {
-        clearInterval(check);
-        resolve('TAB_LOST');
-        return;
-      }
-      const stopBtn = document.querySelector('button[aria-label="Stop Response"], button[aria-label="Stop response"], button[aria-label="응답 중단"], button[aria-label="응답 중지"]');
+      const stopBtn = document.querySelector('button[aria-label="응답 중단"], button[aria-label="Stop Response"]');
       const streaming = document.querySelector('[data-is-streaming="true"]');
       if (!stopBtn && !streaming) {
         clearInterval(check);
@@ -154,18 +243,55 @@ function: async () => {
   });
 }
 ```
-- Returns: `'DONE'` (complete), `'TIMEOUT'` (exceeded 5 min), or `'TAB_LOST'` (tab navigated/crashed)
+- Returns: `'DONE'` (complete) or `'TIMEOUT'` (exceeded 5 min)
 - For complex prompts (web search, deep research): increase timeout to `600000` (10 min)
 - On error (tab navigated/crashed): re-select tab (`select_page`) and retry
-- If result after `'DONE'` is < 20 chars or contains "error"/"went wrong": claude.ai error → resend question
 
-### Streaming Detection (fallback: manual polling) / 수동 polling (fallback)
+### Stability Check (Step 5, single MCP call — prevents false completion)
+After streaming wait finishes, confirm the response is truly complete. Measures response text length twice at 3-second intervals — if equal, it's done:
+```
+chrome-devtools - evaluate_script
+function: async () => {
+  const getLen = () => {
+    const userMsgs = document.querySelectorAll('[data-testid="user-message"]');
+    const last = userMsgs[userMsgs.length - 1];
+    if (!last) return 0;
+    let current = last;
+    for (let depth = 0; depth < 10; depth++) {
+      let parent = current.parentElement;
+      if (!parent) break;
+      let nextSib = parent.nextElementSibling;
+      if (nextSib) {
+        const text = nextSib.innerText;
+        if (!text || text.trim().length === 0) { current = parent; continue; }
+        if (text.includes('Claude is AI')) { current = parent; continue; }
+        if (getComputedStyle(nextSib).opacity === '0') { current = parent; continue; }
+        if (nextSib.children.length === 0 && text.length < 15) { current = parent; continue; }
+        if (nextSib.querySelector('[data-testid="user-message"]')) { current = parent; continue; }
+        return text.length;
+      }
+      current = parent;
+    }
+    return 0;
+  };
+  const len1 = getLen();
+  await new Promise(r => setTimeout(r, 3000));
+  const len2 = getLen();
+  return { len1, len2, stable: len1 === len2 && len1 > 0 };
+}
+```
+- `stable: true` → proceed to response extraction.
+- `stable: false` → text is still changing. Repeat Step 5. (After 3 retries still unstable, attempt extraction anyway.)
 
+### Error Response Principle
+**If the extracted response looks wrong (too short, unexpected content), do not judge based on assumptions alone — take a screenshot or re-read the DOM to confirm the actual state before acting.**
+
+### Streaming Detection (fallback: manual polling)
 Use when the async method returns errors or MCP doesn't support async:
 ```
 chrome-devtools - evaluate_script
 function: () => {
-  const stopBtn = document.querySelector('button[aria-label="Stop Response"], button[aria-label="Stop response"], button[aria-label="응답 중단"], button[aria-label="응답 중지"]');
+  const stopBtn = document.querySelector('button[aria-label="응답 중단"], button[aria-label="Stop Response"], button[aria-label="Stop response"]');
   const streaming = document.querySelector('[data-is-streaming="true"]');
   return {
     isStreaming: !!(stopBtn || streaming),
@@ -176,15 +302,12 @@ function: () => {
 ```
 Run this every 3-5 seconds. When `isStreaming` becomes `false`, the response is complete.
 
----
-
-## Read Response / 응답 텍스트 읽기
+## Read Response
 
 **NEVER read via screenshot** — long responses won't fit on screen.
 
-### (Recommended) Scroll to Bottom Before Extraction / 추출 전 스크롤
-
-Separate evaluate_script call to scroll down. Ensures lazy rendering completion + user visibility:
+### (Recommended) Scroll to Bottom Before Extraction
+Separate evaluate_script call to scroll down. Ensures lazy rendering completion + user visibility. Must be a separate call from extraction (browser needs time to render):
 ```
 chrome-devtools - evaluate_script
 function: () => {
@@ -202,8 +325,9 @@ function: () => {
   return 'NO_SCROLLABLE_FOUND';
 }
 ```
+claude.ai currently doesn't use virtual scrolling so extraction works without scrolling, but recommended for future-proofing + user visibility.
 
-### Extract Last Assistant Response / 마지막 응답 추출
+### Extract Last Assistant Response
 ```
 chrome-devtools - evaluate_script
 function: () => {
@@ -232,28 +356,100 @@ function: () => {
 }
 ```
 
----
+⚠️ **Server Instability**
+claude.ai may show toast errors during outages.
+Symptoms: frozen spinner, empty response, or old/irrelevant response extracted.
+If suspected, wait before retrying rather than looping immediately.
 
-## Token Saving — English Conversation Mode / 토큰 절약 — 영어 대화 모드
+## Artifact (File) Reception
+
+When web Claude generates artifacts (code files etc.), save them locally with **zero context consumption**.
+
+### Chrome Download Path Detection
+Determine Chrome's download directory before receiving artifacts. Read from Chrome Preferences:
+```
+Bash - node -e "const p=require('path'),os=require('os'); const prefs=JSON.parse(require('fs').readFileSync(p.join(os.homedir(),'AppData/Local/Google/Chrome/User Data/Default/Preferences'),'utf8')); console.log(prefs.download?.default_directory || p.join(os.homedir(),'Downloads'))"
+```
+> macOS: `~/Library/Application Support/Google/Chrome/Default/Preferences`
+> Linux: `~/.config/google-chrome/Default/Preferences`
+
+### Artifact List Query
+Check if the response contains artifacts:
+```
+chrome-devtools - evaluate_script
+function: () => {
+  const cards = document.querySelectorAll('[role="button"]');
+  const artifacts = [];
+  cards.forEach(c => {
+    const text = c.textContent?.trim();
+    if (text && (text.includes('Download') || text.includes('다운로드')) && !text.includes('all') && !text.includes('모두')) {
+      const name = text.replace('Download', '').replace('다운로드', '').trim();
+      artifacts.push(name);
+    }
+  });
+  return { count: artifacts.length, artifacts: artifacts };
+}
+```
+
+### Artifact Reception Procedure (download method, recommended)
+
+Code files may not work with the "Copy" button, so **prefer the download method**. Works on all OS.
+
+1. Click the artifact's "Download" button:
+```
+chrome-devtools - evaluate_script
+function: (artifactName) => {
+  const cards = document.querySelectorAll('[role="button"]');
+  const card = Array.from(cards).find(c => c.textContent.includes(artifactName));
+  if (!card) return 'CARD_NOT_FOUND';
+  const dlBtn = card.querySelector('button');
+  if (dlBtn) { dlBtn.click(); return 'downloading ' + artifactName; }
+  return 'DL_BTN_NOT_FOUND';
+}
+args: ["Utils"]
+```
+
+2. Wait for download to complete (1-2 seconds):
+```
+Bash - sleep 2
+```
+
+3. Find the latest file in the download folder (Chrome appends `(N)` for duplicates, so use glob+mtime):
+```
+Bash - ls -t "<download-path>/filename"* | head -1
+```
+Example: `ls -t ~/Downloads/utils*.py | head -1` → most recent `utils.py` or `utils (2).py`
+
+4. Move to the desired location:
+```
+Bash - mv "<downloaded-file-path>" "<final-destination>"
+```
+
+5. Repeat steps 1-4 for additional artifacts.
+
+### Notes
+- Chrome names duplicate downloads as `filename (N).ext` (all OS, Chrome behavior). `ls -t glob | head -1` gets the latest.
+- Responses without artifacts return a card count of 0.
+- The "Download" button text varies by UI language (`Download` / `다운로드`).
+
+## Token Saving — English Conversation Mode
 
 Korean uses ~1.5-2x more tokens than English. For automated processing where the user isn't watching, communicate in English to save tokens.
 
-### Rules / 적용 규칙
-- **User is watching** (user said "discuss with claude.ai", "의논해", "물어봐" and waits for result): Use the user's language
+### Rules
+- **User is watching** (user said "discuss with claude.ai", "ask", etc. and waits for result): Use the user's language
 - **Automated processing** (Claude Code collaborates with claude.ai on its own for problem-solving): Append `"Answer in English only."` to the message, process internally, then report to user in their language
 
----
-
-## Tab Usage Rules / 대화 탭 사용 규칙
+## Tab Usage Rules
 
 **Default: Use the currently open claude.ai chat. Do NOT navigate with navigate_page.**
 
 1. If the user has a page open, remember the current URL (format: `https://claude.ai/chat/{chat-id}`)
 2. If no `https://claude.ai/` tab exists among open tabs, navigate to the remembered URL (or `https://claude.ai/` if none remembered)
 
----
+After page load, perform the input → send → read response procedure above.
 
-## Saving Conversation Conclusions / 대화 결론 저장 규칙
+## Saving Conversation Conclusions
 
 After conversing with claude.ai, ask yourself before responding to the user:
 
@@ -267,18 +463,35 @@ Format:
 - decisions: list of decisions/findings (with rationale)
 - Do NOT copy the entire conversation — extract conclusions only
 
----
-
-## Multi-turn Conversations / 다회전 대화
+## Multi-turn Conversations
 
 For discussions, reviews, or verification: don't stop after one round. Read the response and follow up until a conclusion is reached. For simple questions, a single round is fine. When sending messages, always include the current situation and what kind of input you need (review, verification, opinion, direction).
 
+Do NOT just dump materials and ask "what do you think?" Always include your own analysis and specific questions/counterpoints. Not "here's the code, please review" but "here's the code and my analysis. Specifically, I think X about Y — do you agree or have a counterargument?"
+
+## Verification Protocol Tag (VERIFICATION_TAG)
+
+When iterative verification is needed, append this tag to the end of verification request messages to web Claude. It forces a structured response format so the next action (fix/complete) is unambiguous.
+
+**Tag (paste verbatim at the end of verification request messages):**
+```
 ---
+[VERIFICATION PROTOCOL]
+After your review, end your response with exactly one of:
+⚠️ CORRECTIONS: [N] — fix these and send back for re-verification.
+✅ CONFIRMED — no issues found.
+---
+```
 
-## Troubleshooting / 트러블슈팅
+**Usage rules:**
+- Append only to verification (VERIFY) messages
+- Do NOT append to instruction request (INSTRUCT) messages
+- Append independently from `"Answer in English only."` (the English directive goes on all messages separately)
 
-| Issue / 문제 | Solution / 해결 |
-|--------------|----------------|
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
 | chrome-devtools MCP disconnected | Reconnect in `/mcp` |
 | Input field not found | claude.ai UI updated — search `[contenteditable="true"]` via evaluate_script |
 | Cannot read response | `[data-testid="user-message"]` selector changed — re-explore DOM |
@@ -286,7 +499,7 @@ For discussions, reviews, or verification: don't stop after one round. Read the 
 
 ---
 
-## DOM Selector Update Rules / DOM 셀렉터 변경 감지 규칙
+## DOM Selector Update Rules
 
 **claude.ai's DOM structure can change at any time with UI updates.**
 
@@ -296,39 +509,7 @@ When a selector stops working:
 3. Update scripts to the latest version, keeping old selectors as fallbacks
 4. Record the date, change, and reason in the changelog
 
-### How to Discover New Selectors / 새 셀렉터 찾는 방법
-
-When UI language changes or claude.ai updates its UI, use these discovery scripts:
-
-**Find all buttons with aria-labels on the page:**
-```
-() => {
-  const btns = document.querySelectorAll('button[aria-label]');
-  return [...new Set([...btns].map(b => b.getAttribute('aria-label')))].sort();
-}
-```
-
-**Find Stop button during streaming** (send a long question first, then run within 3s):
-```
-() => {
-  const btns = document.querySelectorAll('button[aria-label]');
-  return [...btns].map(b => b.getAttribute('aria-label'))
-    .filter(l => l && (l.toLowerCase().includes('stop') || l.includes('중단') || l.includes('중지')));
-}
-```
-
-**Find Remove button for file attachments** (attach a file first, then run):
-```
-() => {
-  const fieldset = document.querySelector('fieldset');
-  if (!fieldset) return 'NO_FIELDSET';
-  return [...fieldset.querySelectorAll('button[aria-label]')].map(b => b.getAttribute('aria-label'));
-}
-```
-
----
-
-## Verified Selectors & Methods / 검증된 셀렉터 및 방법
+## Verified Selectors & Methods
 
 | Component | Selector / Value | Language | Verified | Notes |
 |-----------|-----------------|----------|----------|-------|
@@ -337,11 +518,13 @@ When UI language changes or claude.ai updates its UI, use these discovery script
 | Stop button | `"Stop Response"`, `"응답 중지"` | EN/KO | 2026-03-22 | Fallback |
 | File remove | `"Remove"` | EN | 2026-03-25 | |
 | File remove | `"제거"` | KO | 2026-03-23 | |
-| Streaming wait | async Promise + setInterval(3s) | — | 2026-03-24 | Preferred. TAB_LOST detection |
+| Streaming wait | async Promise + setInterval(3s) | — | 2026-03-24 | Preferred |
 | Streaming wait | repeated evaluate_script (3-5s) | — | 2026-03-22 | Fallback for async-unsupported MCP |
 | File verification | DOM text search (~100 tokens) | — | 2026-03-23 | |
+| Send button | `"Send Message"` | EN | 2026-03-28 | |
+| Send button | `"메시지 보내기"` | KO | 2026-03-28 | |
 
-### File Attachment Removal / 첨부 삭제
+### File Attachment Removal
 
 #### Current Method (v1, 2026-03-23)
 ```
@@ -360,7 +543,7 @@ function: () => {
 - Clicks in reverse order (DOM stability during removal)
 - Verified with 4 simultaneous file removals
 
-#### Fallback Selector Search / 대체 셀렉터 탐색 방법
+#### Fallback Selector Search
 If `aria-label="Remove"` / `"제거"` stops working:
 1. **Enumerate all fieldset buttons**: Check aria-label, title, class, SVG presence
 2. **Explore file card structure**: Find sibling buttons of filename elements

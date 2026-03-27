@@ -6,7 +6,10 @@ Claude Code plugins by **codedby**.
 
 | Plugin | Description | Status |
 |--------|-------------|--------|
-| [ask-claude-web](./plugins/ask-claude-web/) | Two Claudes talk to each other — Claude Code asks claude.ai directly, gets answers, and acts on them | v1.3.0 |
+| [ask-claude-web](./plugins/ask-claude-web/) | Two Claudes talk to each other — Claude Code asks claude.ai directly, gets answers, and acts on them | v1.5.0 |
+| [statusline](./plugins/statusline/) | Rich status bar — rate limits, context usage, git info, task progress, and more in one HUD line | v1.0.0 |
+| [session-memory](./plugins/session-memory/) | Session-scoped keyword memory — save decisions, recall context after compaction, search across sessions | v1.0.0 |
+| [guard-claude-dir](./plugins/guard-claude-dir/) | Protects .claude/ directory from accidental modifications and critical config file deletion | v1.0.0 |
 
 ## Installation
 
@@ -16,6 +19,9 @@ Claude Code plugins by **codedby**.
 
 # 2. Install a plugin
 /plugin install ask-claude-web@codedby-claude-plugins
+/plugin install statusline@codedby-claude-plugins
+/plugin install session-memory@codedby-claude-plugins
+/plugin install guard-claude-dir@codedby-claude-plugins
 ```
 
 ## License
