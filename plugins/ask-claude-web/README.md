@@ -4,7 +4,7 @@
 
 **No copy-paste — claude.ai and Claude Code talk directly.**
 
-**Latest: v1.5.0** · [Changelog](./CHANGELOG.md)
+**Latest: v1.6.1** · [Changelog](./CHANGELOG.md)
 
 PEV Loop (Plan → Execute → Verify), Multi-Agent Orchestration —
 the key patterns in 2026 AI development all point in one direction:
@@ -84,7 +84,7 @@ with claude.ai, this plugin is a better fit:
 | **Waiting** | Async poller, auto-waits in 1 tool call (free to do other work meanwhile) | Continuous screenshots to check completion |
 | **User freedom** | Free to use your computer (including other Chrome tabs) | AI occupies mouse/keyboard, user can't work |
 | **Scope** | claude.ai tab only | Entire desktop |
-| **Status** | Stable (v1.0.0) | Research Preview ("still early" — Anthropic) |
+| **Status** | Stable (since v1.0.0) | Research Preview ("still early" — Anthropic) |
 
 </details>
 

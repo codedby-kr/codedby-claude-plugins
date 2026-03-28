@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.1
+- Replaced 3-step message flow with 2-step flow — removed standalone prep step, merged cleanup into send script
+- Send script now includes attachment gate: auto-detects and removes stale attachments from previous cycles before sending
+- Polling-based removal (100ms interval, 2s timeout) replaces fixed 300ms delays — adapts to actual DOM speed
+- All send responses now include `sentWith` file list and descriptive `message` for context-aware diagnostics
+- New error returns: `STILL_STREAMING`, `CLEANUP_FAILED`, `MISSING_ATTACHMENTS` with actionable messages
+- Fixed 'web Claude' duplicate in SKILL.md description
+- Fixed Computer Use comparison table showing "Stable (v1.0.0)" → "Stable (since v1.0.0)"
+
 ## 1.5.0
 - Full SKILL.md rewrite — generalized paths (`${CLAUDE_PLUGIN_ROOT}`), bilingual DOM selectors, server instability warning, cleanup plan applied
 - Added execute-loop-doc, execute-loop-msg commands (public) and execute-loop-violations [INTERNAL]

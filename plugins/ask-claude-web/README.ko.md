@@ -4,7 +4,7 @@
 
 **복사-붙여넣기 없이 claude.ai와 Claude Code가 직접 대화합니다.**
 
-**최신: v1.5.0** · [변경 이력](./CHANGELOG.md)
+**최신: v1.6.1** · [변경 이력](./CHANGELOG.md)
 
 PEV Loop (Plan → Execute → Verify), Multi-Agent Orchestration —
 2026년 AI 개발의 핵심 패턴들은 모두 "AI가 혼자 하지 않고, 역할을 나눠서 협업한다"는
@@ -85,7 +85,7 @@ Computer Use는 Anthropic이 새로 출시한 기능으로, Claude가 마우스/
 | **대기** | 비동기 폴러 1회 호출로 자동 대기 (그 사이 다른 작업 가능) | 완료 확인을 위해 계속 스크린샷 촬영 |
 | **사용자 자유도** | 컴퓨터 자유롭게 사용 가능 (다른 크롬 탭 포함) | AI가 마우스/키보드 점유, 사용자 작업 불가 |
 | **범위** | claude.ai 탭만 | 데스크톱 전체 |
-| **상태** | 안정 (v1.0.0) | 리서치 프리뷰 ("아직 초기 단계" — Anthropic) |
+| **상태** | 안정 (v1.0.0부터) | 리서치 프리뷰 ("아직 초기 단계" — Anthropic) |
 
 </details>
 

@@ -1,7 +1,7 @@
 ﻿---
 name: ask-claude-web
 argument-hint: "discuss with claude.ai [topic or context]"
-description: "Load this skill whenever 'web Claude', 'claude.ai', 'web Claude', 'Claude chatbot' is mentioned as a communication target. Automated communication skill that sends messages to a claude.ai web tab and receives responses. Covers all interactions with claude.ai: discuss, verify, review, ask, relay, share, consult. Based on chrome-devtools MCP. Dedicated to real-time conversation with a claude.ai tab. Trigger on: 'discuss with claude.ai', 'verify with claude.ai', 'ask claude.ai', 'discuss with web claude', 'get claude.ai's review', 'let web claude handle this', 'claude.ai would know this better', 'get claude.ai's opinion'. NEVER use take_snapshot (wastes 130K+ tokens)."
+description: "Load this skill whenever 'web Claude', 'claude.ai', 'Claude chatbot' is mentioned as a communication target. Automated communication skill that sends messages to a claude.ai web tab and receives responses. Covers all interactions with claude.ai: discuss, verify, review, ask, relay, share, consult. Based on chrome-devtools MCP. Dedicated to real-time conversation with a claude.ai tab. Trigger on: 'discuss with claude.ai', 'verify with claude.ai', 'ask claude.ai', 'discuss with web claude', 'get claude.ai's review', 'let web claude handle this', 'claude.ai would know this better', 'get claude.ai's opinion'. NEVER use take_snapshot (wastes 130K+ tokens)."
 ---
 
 # ask-claude-web Skill
@@ -92,50 +92,9 @@ chrome-devtools - select_page (pageId: <claude.ai tab number>, bringToFront: tru
 ```
 If you don't know the tab number, run `list_pages` first.
 
-## Message Sending — 3-Step Universal Flow
+## Message Sending — 2-Step Flow
 
-Whether sending text only or text with file attachments, **always use the same flow**. No need to choose between methods.
-
-### Step 1: Prep (streaming check + clear input + remove attachments)
-```
-chrome-devtools - evaluate_script
-function: async () => {
-  // Streaming check
-  const stopBtn = document.querySelector(
-    'button[aria-label="Stop Response"], button[aria-label="응답 중단"], button[aria-label="Stop response"]'
-  );
-  const streaming = document.querySelector('[data-is-streaming="true"]');
-  if (stopBtn || streaming) return { safe_to_send: false };
-
-  // Remove existing file attachments
-  const fieldset = document.querySelector('fieldset');
-  let removed = 0;
-  if (fieldset) {
-    const removeBtns = fieldset.querySelectorAll('button[aria-label="Remove"], button[aria-label="제거"]');
-    for (let i = removeBtns.length - 1; i >= 0; i--) { removeBtns[i].click(); }
-    removed = removeBtns.length;
-  }
-
-  // Wait for attachment removal to complete (async DOM update)
-  if (removed > 0) {
-    await new Promise(r => setTimeout(r, 300));
-  }
-
-  // Clear input field
-  const el = document.querySelector('[contenteditable="true"][data-placeholder]')
-    || document.querySelector('fieldset [contenteditable="true"]')
-    || document.querySelector('[contenteditable="true"]');
-  if (!el) return { error: 'INPUT_NOT_FOUND' };
-  el.focus();
-  el.textContent = '';
-
-  return { ready: true, removed };
-}
-```
-- `safe_to_send: false` → streaming in progress. Wait via Step 4 (streaming wait), then retry Step 1.
-- `ready: true` → proceed to Step 2 (if files to attach) or Step 3 (text only).
-
-### Step 2: File Attachment (optional — only when files need to be attached)
+### Step 1: File Attachment (optional — only when files need to be attached)
 
 | OS | Command |
 |----|---------|
@@ -150,28 +109,112 @@ chrome-devtools - press_key (key: "Meta+v")       // macOS
 ```
 If verification is needed, use the DOM check script from "File Attachment Procedure" Step 4.
 
-### Step 3: Text Input + Send
+### Step 2: Send (with built-in attachment gate)
+
+This single script handles streaming check, stale attachment cleanup, text input, and send. **No separate prep step needed** — cleanup is built into the send action.
+
+Set the `EXPECTED` value at the top of the script to the number of files you just pasted (0 for text-only, 3 if you pasted 3 files). Do NOT use the `args` parameter — it requires a snapshot and will fail.
 ```
 chrome-devtools - evaluate_script
 function: async () => {
+  const expected = 0; // ← SET THIS: 0 for text-only, N for N files
+  const fieldset = document.querySelector('fieldset');
+
+  // Streaming guard
+  const stopBtn = document.querySelector(
+    'button[aria-label="Stop Response"], button[aria-label="응답 중단"], button[aria-label="Stop response"]'
+  );
+  if (stopBtn || document.querySelector('[data-is-streaming="true"]'))
+    return { sent: false, error: 'STILL_STREAMING', message: 'Previous response is still streaming. Wait for it to finish, then retry.' };
+
+  // File name extraction helper (for diagnostic messages)
+  const getFileNames = () => {
+    const btns = fieldset ? fieldset.querySelectorAll('button') : [];
+    const names = [];
+    for (const btn of btns) {
+      const t = btn.textContent.trim();
+      if (t && /\.[a-z]{1,4}/i.test(t)) {
+        const match = t.match(/_([^_]+\.[a-z]{1,4})/i);
+        names.push(match ? match[1] : t.replace(/\d+줄.*$|\d+lines.*$/i, '').substring(0, 40));
+      }
+    }
+    return names;
+  };
+
+  const beforeFiles = getFileNames();
+  let attachBtns = fieldset
+    ? fieldset.querySelectorAll('button[aria-label="Remove"], button[aria-label="제거"]')
+    : [];
+  const actual = attachBtns.length;
+
+  // Attachment gate: remove stale files from front if excess
+  if (actual > expected) {
+    const staleFiles = beforeFiles.slice(0, actual - expected);
+    const freshFiles = beforeFiles.slice(actual - expected);
+    const excess = actual - expected;
+    for (let i = 0; i < excess; i++) {
+      const btns = fieldset.querySelectorAll('button[aria-label="Remove"], button[aria-label="제거"]');
+      if (btns[0]) btns[0].click();
+    }
+    // Poll until count matches (100ms interval, 2s max)
+    const ok = await new Promise(resolve => {
+      const s = Date.now();
+      const poll = setInterval(() => {
+        const remain = fieldset.querySelectorAll('button[aria-label="Remove"], button[aria-label="제거"]').length;
+        if (remain === expected) { clearInterval(poll); resolve(true); }
+        else if (Date.now() - s > 2000) { clearInterval(poll); resolve(false); }
+      }, 100);
+    });
+    if (!ok) {
+      const remainFiles = getFileNames();
+      return {
+        sent: false, error: 'CLEANUP_FAILED',
+        message: 'Stale attachments from a previous cycle were detected. Tried to remove ' + excess + ' stale file(s) [' + staleFiles.join(', ') + '] keeping ' + expected + ' fresh file(s) [' + freshFiles.join(', ') + ']. Removal did not complete within 2s. ' + remainFiles.length + ' file(s) remain: [' + remainFiles.join(', ') + ']. Retry this script.',
+        remaining: remainFiles
+      };
+    }
+  } else if (actual < expected) {
+    return {
+      sent: false, error: 'MISSING_ATTACHMENTS',
+      message: 'Expected ' + expected + ' file(s) but only found ' + actual + ': [' + beforeFiles.join(', ') + ']. ' + (expected - actual) + ' file(s) missing. Ctrl+V paste may have failed or input was not focused. Re-run the file paste (Step 1), then retry this script.',
+      found: beforeFiles
+    };
+  }
+
+  // Type + send
+  const sentWith = getFileNames();
   const el = document.querySelector('[contenteditable="true"][data-placeholder]')
     || document.querySelector('fieldset [contenteditable="true"]')
     || document.querySelector('[contenteditable="true"]');
   if (!el) return { error: 'INPUT_NOT_FOUND' };
   el.focus();
+  el.textContent = '';
   document.execCommand('insertText', false, 'YOUR MESSAGE HERE');
-  // Wait for React to enable the send button
   await new Promise(r => setTimeout(r, 300));
   const sendBtn = document.querySelector('button[aria-label="Send Message"], button[aria-label="메시지 보내기"]');
   if (!sendBtn) return { sent: false, error: 'SEND_BTN_NOT_FOUND' };
   sendBtn.click();
-  return { sent: true };
+
+  const cleaned = actual > expected;
+  return {
+    sent: true,
+    message: cleaned
+      ? 'Removed ' + (actual - expected) + ' stale file(s) from front. Sent with ' + expected + ' file(s): [' + sentWith.join(', ') + '].'
+      : expected > 0
+        ? 'Sent with ' + expected + ' file(s): [' + sentWith.join(', ') + ']. No cleanup needed.'
+        : 'Sent with no file attachments.',
+    sentWith
+  };
 }
 ```
-- After `sent: true`, always run the health check below to confirm actual delivery
+**Return values:**
+- `sent: true` → message sent. `sentWith` lists the files that went with it. Always run the health check below to confirm delivery.
+- `STILL_STREAMING` → previous response not finished. Wait via streaming check, then retry.
+- `CLEANUP_FAILED` → stale attachments couldn't be removed in 2s. Retry the script.
+- `MISSING_ATTACHMENTS` → fewer files than expected. Re-paste files (Step 1), then retry.
 - No uid needed — DOM is manipulated directly via `evaluate_script`
 
-### Health Check (after Steps 2+3, single MCP call)
+### Health Check (after Step 2, single MCP call)
 Confirms whether the message was actually sent. Waits 2s internally, then checks 4 indicators in a single evaluate_script:
 ```
 chrome-devtools - evaluate_script
@@ -211,7 +254,7 @@ function: async () => {
 }
 ```
 **Verdict:**
-- Input empty + streaming → **sent successfully.** Proceed to Step 4 (streaming wait).
+- Input empty + streaming → **sent successfully.** Proceed to streaming wait below.
 - Input has text + not streaming → **send failed.** Resend.
 - Input empty + not streaming → **ambiguous.** Check responseLen for further judgment.
 
@@ -225,7 +268,7 @@ function: async () => {
 
 After sending, wait for claude.ai to finish generating its response.
 
-### Streaming Completion Detection (Step 4, preferred: async Promise)
+### Streaming Completion Detection (preferred: async Promise)
 Single evaluate_script call that waits until response is complete. Checks every 3 seconds, 5-minute timeout:
 ```
 chrome-devtools - evaluate_script
@@ -247,7 +290,7 @@ function: async () => {
 - For complex prompts (web search, deep research): increase timeout to `600000` (10 min)
 - On error (tab navigated/crashed): re-select tab (`select_page`) and retry
 
-### Stability Check (Step 5, single MCP call — prevents false completion)
+### Stability Check (single MCP call — prevents false completion)
 After streaming wait finishes, confirm the response is truly complete. Measures response text length twice at 3-second intervals — if equal, it's done:
 ```
 chrome-devtools - evaluate_script
@@ -281,7 +324,7 @@ function: async () => {
 }
 ```
 - `stable: true` → proceed to response extraction.
-- `stable: false` → text is still changing. Repeat Step 5. (After 3 retries still unstable, attempt extraction anyway.)
+- `stable: false` → text is still changing. Repeat stability check. (After 3 retries still unstable, attempt extraction anyway.)
 
 ### Error Response Principle
 **If the extracted response looks wrong (too short, unexpected content), do not judge based on assumptions alone — take a screenshot or re-read the DOM to confirm the actual state before acting.**
@@ -378,7 +421,7 @@ Check if the response contains artifacts:
 ```
 chrome-devtools - evaluate_script
 function: () => {
-  const cards = document.querySelectorAll('[role="button"]');
+  const cards = document.querySelectorAll('[data-testid*="artifact"], [role="button"]');
   const artifacts = [];
   cards.forEach(c => {
     const text = c.textContent?.trim();
@@ -395,18 +438,22 @@ function: () => {
 
 Code files may not work with the "Copy" button, so **prefer the download method**. Works on all OS.
 
-1. Click the artifact's "Download" button:
+1. Click the artifact's "Download" button (set `artifactName` to the artifact title):
 ```
 chrome-devtools - evaluate_script
-function: (artifactName) => {
-  const cards = document.querySelectorAll('[role="button"]');
+function: () => {
+  const artifactName = 'Utils'; // ← SET THIS to the artifact title
+  const cards = document.querySelectorAll('[data-testid*="artifact"], [role="button"]');
   const card = Array.from(cards).find(c => c.textContent.includes(artifactName));
   if (!card) return 'CARD_NOT_FOUND';
-  const dlBtn = card.querySelector('button');
+  const dlBtn = Array.from(card.querySelectorAll('button')).find(btn => {
+    const aria = btn.getAttribute('aria-label') || '';
+    const text = btn.textContent?.trim() || '';
+    return /download|다운로드/i.test(aria) || /download|다운로드/i.test(text);
+  });
   if (dlBtn) { dlBtn.click(); return 'downloading ' + artifactName; }
   return 'DL_BTN_NOT_FOUND';
 }
-args: ["Utils"]
 ```
 
 2. Wait for download to complete (1-2 seconds):

@@ -12,7 +12,7 @@
       "name": "ask-claude-web",
       "source": "./plugins/ask-claude-web",
       "description": "Two Claudes talk to each other — Claude Code asks claude.ai directly, gets answers, and acts on them",
-      "version": "1.5.0"
+      "version": "1.6.1"
     },
     {
       "name": "statusline",
@@ -29,7 +29,7 @@
     {
       "name": "guard-claude-dir",
       "source": "./plugins/guard-claude-dir",
-      "description": "Protects .claude/ directory from accidental modifications and prevents critical config file deletion",
+      "description": "Skips .claude/ permission prompt dialogs by pre-empting operations with node-based workarounds, and guards critical config files from deletion",
       "version": "1.0.0"
     }
   ]

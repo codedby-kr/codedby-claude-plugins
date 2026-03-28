@@ -1,7 +1,7 @@
 ---
 name: ask-claude-web
 argument-hint: "claude.ai와 [주제나 맥락] 의논해"
-description: "'웹 클로드', 'claude.ai', 'web Claude', '클로드 웹', '클로드 챗봇', 'Claude chatbot'이 통신 대상으로 언급되면 이 스킬을 로드할 것. claude.ai 웹 탭에 메시지를 보내고 응답을 받는 자동 통신 스킬. 의논, 검증, 리뷰, 질문, 인사, 전달, 공유, 상의 등 claude.ai와의 모든 상호작용에 해당. chrome-devtools MCP 기반. claude.ai 탭과의 실시간 대화 전용."
+description: "'웹 클로드', '웹클로드', 'claude.ai', 'web Claude', '클로드 웹', '클로드 챗봇', 'Claude chatbot'이 통신 대상으로 언급되면 이 스킬을 로드할 것. claude.ai 웹 탭에 메시지를 보내고 응답을 받는 자동 통신 스킬. 의논, 검증, 리뷰, 질문, 인사, 전달, 공유, 상의 등 claude.ai와의 모든 상호작용에 해당. chrome-devtools MCP 기반. claude.ai 탭과의 실시간 대화 전용."
 ---
 
 # ask-claude-web 스킬
@@ -87,78 +87,121 @@ chrome-devtools - select_page (pageId: <claude.ai 탭 번호>, bringToFront: tru
 ```
 탭 번호를 모르면 먼저 `list_pages`로 확인.
 
-## 메시지 전송 — 3단계 범용 흐름
+## 메시지 전송 — 2단계 흐름
 
-텍스트만 보낼 때도, 파일 첨부와 함께 보낼 때도 **항상 같은 흐름**을 사용한다. 방법을 선택할 필요가 없다.
-
-### 1단계: 준비 (스트리밍 체크 + 입력창 비우기 + 첨부 제거)
-```
-chrome-devtools - evaluate_script
-function: async () => {
-  // 스트리밍 체크
-  const stopBtn = document.querySelector(
-    'button[aria-label="Stop Response"], button[aria-label="응답 중단"], button[aria-label="Stop response"]'
-  );
-  const streaming = document.querySelector('[data-is-streaming="true"]');
-  if (stopBtn || streaming) return { safe_to_send: false };
-
-  // 첨부 파일 제거
-  const fieldset = document.querySelector('fieldset');
-  let removed = 0;
-  if (fieldset) {
-    const removeBtns = fieldset.querySelectorAll('button[aria-label="Remove"], button[aria-label="제거"]');
-    for (let i = removeBtns.length - 1; i >= 0; i--) { removeBtns[i].click(); }
-    removed = removeBtns.length;
-  }
-
-  // 첨부 제거 완료 대기 (DOM 비동기 업데이트)
-  if (removed > 0) {
-    await new Promise(r => setTimeout(r, 300));
-  }
-
-  // 입력창 비우기
-  const el = document.querySelector('[contenteditable="true"][data-placeholder]')
-    || document.querySelector('fieldset [contenteditable="true"]')
-    || document.querySelector('[contenteditable="true"]');
-  if (!el) return { error: 'INPUT_NOT_FOUND' };
-  el.focus();
-  el.textContent = '';
-
-  return { ready: true, removed };
-}
-```
-- `safe_to_send: false` → 스트리밍 중. 4단계(스트리밍 대기)로 대기 후 1단계 재시도.
-- `ready: true` → 2단계(첨부 있을 때) 또는 3단계(텍스트만)로 진행.
-
-### 2단계: 파일 첨부 (선택적 — 첨부할 파일이 있을 때만 실행)
+### 1단계: 파일 첨부 (선택적 — 첨부할 파일이 있을 때만 실행)
 ```
 Bash - powershell -File "${CLAUDE_PLUGIN_ROOT}/scripts/clip-files.ps1" "파일1.md" "파일2.md"
 chrome-devtools - press_key (key: "Control+v")
 ```
 첨부 확인이 필요하면 "파일 첨부 절차"의 4번(DOM 확인) 스크립트를 사용한다.
 
-### 3단계: 텍스트 입력 + 전송
+### 2단계: 전송 (첨부 파일 게이트 내장)
+
+이 단일 스크립트가 스트리밍 체크, 잔여 첨부 정리, 텍스트 입력, 전송을 전부 처리한다. **별도 준비 단계 불필요** — 정리가 전송 동작에 내장되어 있다.
+
+스크립트 상단의 `expected` 값을 붙여넣은 파일 수로 설정한다 (텍스트만: 0, 파일 3개: 3). `args` 파라미터는 사용하지 않는다 — snapshot을 요구하며 실패한다.
 ```
 chrome-devtools - evaluate_script
 function: async () => {
+  const expected = 0; // ← 여기 수정: 텍스트만 0, 파일 N개면 N
+  const fieldset = document.querySelector('fieldset');
+
+  // 스트리밍 체크
+  const stopBtn = document.querySelector(
+    'button[aria-label="Stop Response"], button[aria-label="응답 중단"], button[aria-label="Stop response"]'
+  );
+  if (stopBtn || document.querySelector('[data-is-streaming="true"]'))
+    return { sent: false, error: 'STILL_STREAMING', message: '이전 응답이 아직 생성 중입니다. 완료 후 재시도하세요.' };
+
+  // 파일명 추출 헬퍼 (진단 메시지용)
+  const getFileNames = () => {
+    const btns = fieldset ? fieldset.querySelectorAll('button') : [];
+    const names = [];
+    for (const btn of btns) {
+      const t = btn.textContent.trim();
+      if (t && /\.[a-z]{1,4}/i.test(t)) {
+        const match = t.match(/_([^_]+\.[a-z]{1,4})/i);
+        names.push(match ? match[1] : t.replace(/\d+줄.*$|\d+lines.*$/i, '').substring(0, 40));
+      }
+    }
+    return names;
+  };
+
+  const beforeFiles = getFileNames();
+  let attachBtns = fieldset
+    ? fieldset.querySelectorAll('button[aria-label="Remove"], button[aria-label="제거"]')
+    : [];
+  const actual = attachBtns.length;
+
+  // 첨부 파일 게이트: 초과 시 앞쪽(잔여) 파일 제거
+  if (actual > expected) {
+    const staleFiles = beforeFiles.slice(0, actual - expected);
+    const freshFiles = beforeFiles.slice(actual - expected);
+    const excess = actual - expected;
+    for (let i = 0; i < excess; i++) {
+      const btns = fieldset.querySelectorAll('button[aria-label="Remove"], button[aria-label="제거"]');
+      if (btns[0]) btns[0].click();
+    }
+    // 100ms 간격 polling, 최대 2초
+    const ok = await new Promise(resolve => {
+      const s = Date.now();
+      const poll = setInterval(() => {
+        const remain = fieldset.querySelectorAll('button[aria-label="Remove"], button[aria-label="제거"]').length;
+        if (remain === expected) { clearInterval(poll); resolve(true); }
+        else if (Date.now() - s > 2000) { clearInterval(poll); resolve(false); }
+      }, 100);
+    });
+    if (!ok) {
+      const remainFiles = getFileNames();
+      return {
+        sent: false, error: 'CLEANUP_FAILED',
+        message: '이전 사이클의 잔여 첨부가 감지됨. 앞쪽 ' + excess + '개 [' + staleFiles.join(', ') + '] 제거 시도했으나 2초 내 완료되지 않음. 남은 파일: [' + remainFiles.join(', ') + ']. 이 스크립트를 재실행하세요.',
+        remaining: remainFiles
+      };
+    }
+  } else if (actual < expected) {
+    return {
+      sent: false, error: 'MISSING_ATTACHMENTS',
+      message: expected + '개 파일을 기대했으나 ' + actual + '개만 발견: [' + beforeFiles.join(', ') + ']. ' + (expected - actual) + '개 부족. Ctrl+V 붙여넣기가 실패했거나 입력창에 포커스가 없었을 수 있음. 1단계(파일 첨부)를 다시 실행 후 재시도.',
+      found: beforeFiles
+    };
+  }
+
+  // 텍스트 입력 + 전송
+  const sentWith = getFileNames();
   const el = document.querySelector('[contenteditable="true"][data-placeholder]')
     || document.querySelector('fieldset [contenteditable="true"]')
     || document.querySelector('[contenteditable="true"]');
   if (!el) return { error: 'INPUT_NOT_FOUND' };
   el.focus();
+  el.textContent = '';
   document.execCommand('insertText', false, '메시지 내용');
-  // React 보내기 버튼 활성화 대기
   await new Promise(r => setTimeout(r, 300));
   const sendBtn = document.querySelector('button[aria-label="Send Message"], button[aria-label="메시지 보내기"]');
   if (!sendBtn) return { sent: false, error: 'SEND_BTN_NOT_FOUND' };
   sendBtn.click();
-  return { sent: true };
+
+  const cleaned = actual > expected;
+  return {
+    sent: true,
+    message: cleaned
+      ? '앞쪽 잔여 ' + (actual - expected) + '개 제거 후 ' + expected + '개 파일로 전송: [' + sentWith.join(', ') + '].'
+      : expected > 0
+        ? expected + '개 파일 첨부 전송: [' + sentWith.join(', ') + ']. 정리 불필요.'
+        : '파일 첨부 없이 전송.',
+    sentWith
+  };
 }
 ```
-- `sent: true` 반환 후 반드시 건강 체크(2+3단계)로 실제 전송 여부를 확인한다
+**반환값:**
+- `sent: true` → 전송 완료. `sentWith`에 첨부된 파일 목록. 반드시 아래 건강 체크로 실제 전송 여부를 확인한다.
+- `STILL_STREAMING` → 이전 응답 생성 중. 스트리밍 대기 후 재시도.
+- `CLEANUP_FAILED` → 잔여 첨부 제거 실패 (2초 초과). 스크립트 재실행.
+- `MISSING_ATTACHMENTS` → 기대보다 파일 부족. 1단계(파일 첨부) 재실행 후 재시도.
 - uid 불필요 — `evaluate_script`로 DOM을 직접 조작한다
 
-### 건강 체크 (2+3단계, 1회 MCP 호출)
+### 건강 체크 (2단계 후, 1회 MCP 호출)
 Enter 후 제대로 전송되었는지 확인한다. 2초 내부 대기 + 4가지 확인을 evaluate_script 1회 안에서 처리:
 ```
 chrome-devtools - evaluate_script
@@ -198,7 +241,7 @@ function: async () => {
 }
 ```
 **판정:**
-- 입력창 비었음 + 스트리밍 중 → **정상 전송됨.** 4단계(스트리밍 대기)로 진행.
+- 입력창 비었음 + 스트리밍 중 → **정상 전송됨.** 아래 스트리밍 대기로 진행.
 - 입력창에 텍스트 남음 + 스트리밍 아님 → **전송 실패.** 재전송한다.
 - 입력창 비었음 + 스트리밍 아님 → **애매함.** responseLen으로 추가 판단.
 
@@ -212,7 +255,7 @@ function: async () => {
 
 전송 후 claude.ai가 응답을 생성 완료할 때까지 기다려야 한다.
 
-### 스트리밍 완료 감지 (4단계, preferred: async Promise)
+### 스트리밍 완료 감지 (preferred: async Promise)
 단일 evaluate_script 호출로 응답 완료까지 대기한다. 내부에서 3초 간격 체크, 5분 타임아웃:
 ```
 chrome-devtools - evaluate_script
@@ -234,7 +277,7 @@ function: async () => {
 - 복잡한 프롬프트(web search, deep research)는 타임아웃을 `600000`(10분)으로 늘릴 것
 - 에러 반환 시(탭 이동/크래시): 탭 재선택(`select_page`) 후 재시도
 
-### 안정성 체크 (5단계, 1회 MCP 호출 — 응답 완료 오탐 방지)
+### 안정성 체크 (1회 MCP 호출 — 응답 완료 오탐 방지)
 스트리밍 대기가 끝난 후, 진짜 끝났는지 한 번 더 확인한다. 응답 텍스트 길이를 3초 간격으로 2번 측정해서 같으면 완료로 판단:
 ```
 chrome-devtools - evaluate_script
@@ -268,7 +311,7 @@ function: async () => {
 }
 ```
 - `stable: true` → 응답 추출로 진행.
-- `stable: false` → 아직 텍스트가 변하고 있음. 5단계 반복. (최대 3회 반복 후 그래도 unstable이면 일단 추출 시도)
+- `stable: false` → 아직 텍스트가 변하고 있음. 안정성 체크 반복. (최대 3회 반복 후 그래도 unstable이면 일단 추출 시도)
 
 ### 에러 대응 원칙
 **응답을 읽어왔는데 뭔가 이상하면(너무 짧거나, 예상과 다른 내용), 예상만으로 판단하지 말고 스크린샷을 찍거나 DOM을 다시 읽어서 실제 상황을 확인한 후 대응하라.**
@@ -365,7 +408,7 @@ Bash - node -e "const p=require('path'),os=require('os'); const prefs=JSON.parse
 ```
 chrome-devtools - evaluate_script
 function: () => {
-  const cards = document.querySelectorAll('[role="button"]');
+  const cards = document.querySelectorAll('[data-testid*="artifact"], [role="button"]');
   const artifacts = [];
   cards.forEach(c => {
     const text = c.textContent?.trim();
@@ -382,18 +425,22 @@ function: () => {
 
 코드 파일은 "복사" 버튼이 안 먹을 수 있으므로 **다운로드 방식을 우선** 사용한다. OS 무관.
 
-1. 아티팩트의 "다운로드" 버튼 클릭:
+1. 아티팩트의 "다운로드" 버튼 클릭 (`artifactName`을 아티팩트 제목으로 교체):
 ```
 chrome-devtools - evaluate_script
-function: (artifactName) => {
-  const cards = document.querySelectorAll('[role="button"]');
+function: () => {
+  const artifactName = 'Utils'; // ← 아티팩트 제목으로 교체
+  const cards = document.querySelectorAll('[data-testid*="artifact"], [role="button"]');
   const card = Array.from(cards).find(c => c.textContent.includes(artifactName));
   if (!card) return 'CARD_NOT_FOUND';
-  const dlBtn = card.querySelector('button');
+  const dlBtn = Array.from(card.querySelectorAll('button')).find(btn => {
+    const aria = btn.getAttribute('aria-label') || '';
+    const text = btn.textContent?.trim() || '';
+    return /download|다운로드/i.test(aria) || /download|다운로드/i.test(text);
+  });
   if (dlBtn) { dlBtn.click(); return 'downloading ' + artifactName; }
   return 'DL_BTN_NOT_FOUND';
 }
-args: ["Utils"]
 ```
 
 2. 다운로드 완료 대기 (1~2초):
