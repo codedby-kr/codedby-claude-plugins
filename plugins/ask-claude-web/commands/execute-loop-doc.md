@@ -1,5 +1,5 @@
 ---
-description: "[INTERNAL] Execute tasks from a document plan sequentially with INSTRUCT/WORK/VERIFY cycle and optional web Claude verification"
+description: "Execute tasks from a document plan sequentially with INSTRUCT/WORK/VERIFY cycle and optional web Claude verification"
 argument-hint: '"path" [instructions] [web claude verify] [commit per item] [Phase N only] [context N%]'
 ---
 Execute a documented work plan item by item in sequence. The user provides a path and instructions via `$ARGUMENTS`.

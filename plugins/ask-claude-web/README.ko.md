@@ -203,6 +203,18 @@ claude plugin update ask-claude-web@codedby-claude-plugins -s user
 
 파일 첨부: `"main.py 첨부해서 claude.ai한테 리뷰 요청해"`
 
+### 커맨드
+
+| 커맨드 | 설명 |
+|--------|------|
+| `/ask-claude-web:execute-loop-doc` | 문서에 기술된 작업 계획을 항목별로 실행. 웹 클로드가 중간 관리자 역할 — 지시, 검토, 수정 요청. 단독 모드(자체 검증)도 지원. |
+| `/ask-claude-web:execute-loop-msg` | 동일한 반복 실행이지만 문서 대신 사용자 메시지에서 작업 계획을 구성. |
+
+```
+/ask-claude-web:execute-loop-doc "계획문서/경로.md" 웹 클로드 검증
+/ask-claude-web:execute-loop-msg auth 모듈 리팩터링, 웹 클로드 검증
+```
+
 ---
 
 ## 한국어 스킬 파일
@@ -269,6 +281,11 @@ Claude Code ──evaluate_script──▶ Chrome DevTools Protocol ──DOM─
 </details>
 
 ---
+
+
+## 면책 조항
+
+이 플러그인은 훅, 스킬, 커맨드를 통해 Claude Code의 동작을 변경합니다. 현재 상태 그대로 제공되며 어떠한 보증도 없습니다. 사용에 따른 책임은 사용자에게 있습니다. 데이터 손실, 설정 손상, 의도치 않은 동작에 대해 작성자는 책임지지 않습니다. 시스템 설정과 상호작용하는 플러그인을 설치하거나 업데이트하기 전에 항상 중요한 파일을 백업하세요.
 
 ## 라이선스
 

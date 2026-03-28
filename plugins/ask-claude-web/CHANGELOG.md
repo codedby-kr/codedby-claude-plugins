@@ -2,7 +2,7 @@
 
 ## 1.5.0
 - Full SKILL.md rewrite — generalized paths (`${CLAUDE_PLUGIN_ROOT}`), bilingual DOM selectors, server instability warning, cleanup plan applied
-- Added execute-loop-doc, execute-loop-msg, execute-loop-violations commands [INTERNAL]
+- Added execute-loop-doc, execute-loop-msg commands (public) and execute-loop-violations [INTERNAL]
 - New 3-step universal message sending flow with health check
 - Stability check (Step 5) after streaming completion to prevent false positives
 - Artifact download procedure with Chrome download path detection

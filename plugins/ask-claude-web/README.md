@@ -202,6 +202,18 @@ Then type `/reload-plugins` or restart Claude Code.
 
 File attachment: `"attach main.py and ask claude.ai to review it"`
 
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `/ask-claude-web:execute-loop-doc` | Execute a documented work plan item by item. Web Claude acts as manager — gives instructions, reviews results, requests corrections. Supports standalone mode (self-verify only). |
+| `/ask-claude-web:execute-loop-msg` | Same loop execution, but builds the work plan from your message instead of a document. |
+
+```
+/ask-claude-web:execute-loop-doc "path/to/plan.md" web claude verify
+/ask-claude-web:execute-loop-msg refactor auth module, web claude verify
+```
+
 <details>
 <summary><strong>Platform Support</strong></summary>
 
@@ -257,6 +269,11 @@ Claude Code ──evaluate_script──▶ Chrome DevTools Protocol ──DOM─
 </details>
 
 ---
+
+
+## Disclaimer
+
+This plugin modifies Claude Code's behavior through hooks, skills, and commands. It is provided as-is with no warranty. Use at your own risk. The author is not responsible for any data loss, configuration corruption, or unintended behavior resulting from its use. Always back up important files before installing or updating plugins that interact with system configuration.
 
 ## License
 

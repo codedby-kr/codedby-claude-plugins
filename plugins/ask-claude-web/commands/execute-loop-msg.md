@@ -1,5 +1,5 @@
 ---
-description: "[INTERNAL] Execute tasks from a user message sequentially with INSTRUCT/WORK/VERIFY cycle and optional web Claude verification"
+description: "Execute tasks from a user message sequentially with INSTRUCT/WORK/VERIFY cycle and optional web Claude verification"
 argument-hint: 'task instructions [web claude verify] [commit per item] [context N%]'
 ---
 Analyze the user's message, decompose it into work items, and execute them in sequence. The user provides task instructions via `$ARGUMENTS`.
