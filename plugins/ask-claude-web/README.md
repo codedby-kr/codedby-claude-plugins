@@ -4,7 +4,7 @@
 
 **No copy-paste — claude.ai and Claude Code talk directly.**
 
-**Latest: v1.3.0** · [Changelog](./CHANGELOG.md)
+**Latest: v1.5.0** · [Changelog](./CHANGELOG.md)
 
 PEV Loop (Plan → Execute → Verify), Multi-Agent Orchestration —
 the key patterns in 2026 AI development all point in one direction:
