@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.0
+- Major SKILL.md refactoring: 597 lines → 270 lines (55% reduction)
+- Replaced inline scripts with hint-based approach + 3 external scripts (send.js, wait-streaming.js, extract-response.js)
+- 4-zone structure: Setup → Procedure → Behavioral Rules → Reference
+- TIMEOUT strategy: stability check first, +5min retry once, diagnostic mode
+- Tab selection: "regardless of list_pages results" — prevents pre-selection override
+- clip-files scripts: [SKIP] → [FAILED] with OK/FAILED file lists
+- extract-response.js: added Korean disclaimer filter ("Claude는 AI이며 실수할 수 있습니다")
+- Section heading fix: "### Send message" → "### Run send.js" (removed collision with parent heading)
+
 ## 1.6.1
 - Replaced 3-step message flow with 2-step flow — removed standalone prep step, merged cleanup into send script
 - Send script now includes attachment gate: auto-detects and removes stale attachments from previous cycles before sending

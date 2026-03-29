@@ -44,17 +44,17 @@ Tell the user:
 ### Web Claude Communication Skill (verification mode only)
 All communication with web Claude follows the `ask-claude-web` skill procedures.
 
-### Web Claude Check (verification mode only)
-Check in order:
-1. chrome-devtools MCP connection (`list_pages` call)
-2. claude.ai tab exists and is the only one
-3. Input field is accessible (`evaluate_script` to find `contenteditable`)
+### Web Claude Check (web Claude verification mode only)
+Check in order (chrome-devtools MCP connection is also tested):
+1. Tab selection — do not pre-select a tab based on list_pages results.
+ - If the user specified a URL/tab, use that (regardless of list_pages results).
+ - If not specified, check claude.ai tab exists and is the only one.
+ - Multiple tabs → ask the user which one.
+2. Input field is accessible on the selected tab (`evaluate_script` to find `contenteditable`)
 
 - All OK → "Ready." → proceed immediately
 - Any failure → describe the specific issue + ask user to fix → wait
   - MCP not connected: "Reconnect chrome-devtools in /mcp"
-  - No tab: "Open a claude.ai tab"
-  - Multiple tabs: ask which tab to use
   - Input field inaccessible: "MCP reconnect needed"
 
 ## Step 1: Generate Execution Plan + Show to User

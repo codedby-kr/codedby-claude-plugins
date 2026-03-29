@@ -43,17 +43,17 @@ argument-hint: '"경로" [지시사항] [웹 클로드 검증] [항목마다 커
 ### 웹 클로드 통신 스킬 (검증 모드일 때만)
 웹 클로드와의 모든 통신은 `ask-claude-web` 스킬의 절차를 따른다.
 
-### 웹 클로드 체크 (검증 모드일 때만)
-순서대로 체크:
-1. chrome-devtools MCP 연결 (`list_pages` 호출)
-2. claude.ai 탭 존재 + 단일 여부
-3. 입력창 접근 가능 (`evaluate_script`로 `contenteditable` 탐색)
+### 웹 클로드 체크 (웹 클로드 검증 모드일 때만)
+순서대로 체크(chrome-devtools MCP 연결 상태도 함께 테스트 됨):
+1. 탭 선택 — list_pages 결과로 탭을 미리 선택하지 말 것.
+ - 사용자가 URL/탭을 지정했으면 그것을 사용 (list_pages 결과와 무관).
+ - 지정하지 않았으면 claude.ai 탭 존재 + 단일 여부 확인.
+ - 여러 탭이면 사용자에게 묻기.
+2. 선택한 탭에서 입력창 접근 가능 (`evaluate_script`로 `contenteditable` 탐색)
 
 - 모두 OK → "문제 없습니다." → 바로 진행
 - 실패 시 → 구체적 문제 안내 + 사용자에게 조치 요청 → 대기
   - MCP 미연결: "/mcp에서 chrome-devtools 재연결 필요"
-  - 탭 없음: "claude.ai 탭을 열어주세요"
-  - 탭 여러 개: 어떤 탭을 사용할지 질문
   - 입력창 접근 불가: "MCP 리커넥트가 필요합니다"
 
 ## 1단계: 실행 계획 생성 + 사용자에게 표시
